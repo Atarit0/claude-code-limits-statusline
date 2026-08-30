@@ -20,27 +20,24 @@ bar() {
         (( marker < 0 )) && marker=0
     fi
 
-    local out="" i color ch
+    local out="" i fg bg
     for (( i=0; i<WIDTH; i++ )); do
         if (( i < filled )); then
             if (( i < GREEN_END )); then
-                color=$'\033[32m'
+                fg=$'\033[32m'; bg=$'\033[42m'
             elif (( i < YELLOW_END )); then
-                color=$'\033[93m'
+                fg=$'\033[93m'; bg=$'\033[103m'
             else
-                color=$'\033[31m'
+                fg=$'\033[31m'; bg=$'\033[41m'
             fi
         else
-            color=$'\033[90m'
+            fg=$'\033[90m'; bg=$'\033[100m'
         fi
         if (( i == marker )); then
-            ch='>'
-        elif (( i < filled )); then
-            ch='#'
+            out+=$'\033[97m'"${bg}"'▀'$'\033[0m'
         else
-            ch='.'
+            out+="${fg}"'▄'$'\033[0m'
         fi
-        out+="${color}${ch}"$'\033[0m'
     done
     printf '%s' "$out"
 }
@@ -98,14 +95,14 @@ if [ -n "$WEEK" ]; then
     PCT=$(printf '%.0f' "$WEEK")
     WEEK_REMAINING=$(remaining_secs "$RESETS_WEEK")
     WEEK_TIME_PCT=$(time_pct "$RESETS_WEEK" "$WEEK_TOTAL_SECS")
-    LIMITS=$'\033[1;37m'"7d"$'\033[0m'">$(countdown_7d "$WEEK_REMAINING") ${PCT}% [$(bar "$PCT" "$WEEK_TIME_PCT")]"
+    LIMITS=$'\033[1;37m'"7d"$'\033[0m'">$(countdown_7d "$WEEK_REMAINING") ${PCT}% $(bar "$PCT" "$WEEK_TIME_PCT")"
 fi
 if [ -n "$FIVE_H" ]; then
     PCT=$(printf '%.0f' "$FIVE_H")
     FIVEH_REMAINING=$(remaining_secs "$RESETS_5H")
     FIVEH_TIME_PCT=$(time_pct "$RESETS_5H" "$FIVEH_TOTAL_SECS")
-    LIMITS="${LIMITS:+$LIMITS }"$'\033[1;37m'"5h"$'\033[0m'">$(countdown_5h "$FIVEH_REMAINING") ${PCT}% [$(bar "$PCT" "$FIVEH_TIME_PCT")]"
+    LIMITS="${LIMITS:+$LIMITS  }"$'\033[1;37m'"5h"$'\033[0m'">$(countdown_5h "$FIVEH_REMAINING") ${PCT}% $(bar "$PCT" "$FIVEH_TIME_PCT")"
 fi
 
 WHITE_MODEL=$'\033[37m'"$MODEL"$'\033[0m'
-[ -n "$LIMITS" ] && echo "$WHITE_MODEL: $LIMITS" || echo "$WHITE_MODEL"
+[ -n "$LIMITS" ] && echo "$WHITE_MODEL:  $LIMITS" || echo "$WHITE_MODEL"

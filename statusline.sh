@@ -20,6 +20,18 @@ bar() {
         (( marker < 0 )) && marker=0
     fi
 
+    local marker_fg=$'\033[97m'
+    if [ -n "$time_pct" ]; then
+        local diff=$(( time_pct - pct ))
+        if (( diff >= 15 )); then
+            marker_fg=$'\033[32m'
+        elif (( diff <= -15 )); then
+            marker_fg=$'\033[31m'
+        else
+            marker_fg=$'\033[93m'
+        fi
+    fi
+
     local out="" i fg bg
     for (( i=0; i<WIDTH; i++ )); do
         if (( i < filled )); then
@@ -34,7 +46,7 @@ bar() {
             fg=$'\033[90m'; bg=$'\033[100m'
         fi
         if (( i == marker )); then
-            out+=$'\033[97m'"${bg}"'▀'$'\033[0m'
+            out+="${marker_fg}""${bg}"'▀'$'\033[0m'
         else
             out+="${fg}"'▄'$'\033[0m'
         fi

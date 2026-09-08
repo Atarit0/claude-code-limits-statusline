@@ -1,6 +1,6 @@
 # claude-code-limits-statusline
 
-A drop-in `statusLine` script for [Claude Code](https://claude.com/claude-code) that shows your **5-hour** and **7-day** rate-limit usage as two bars — plus a live countdown to each window's reset, and a marker showing how much of the window's *time* has elapsed, colored green/yellow/red depending on whether that pace is ahead of, in line with, or behind your usage — so you can tell at a glance whether you're burning quota faster or slower than the clock.
+A drop-in `statusLine` script for [Claude Code](https://claude.com/claude-code) that shows your **5-hour** and **7-day** rate-limit usage as two bars — plus a live countdown to each window's reset, and a marker showing how much of the window's *time* has elapsed, colored green/yellow/red depending on whether that pace is comfortably ahead of your usage, roughly in step with it, or behind — so you can tell at a glance whether you're burning quota faster or slower than the clock.
 
 ![screenshot of the statusline in a real terminal](screenshot.jpg)
 
@@ -8,20 +8,36 @@ A drop-in `statusLine` script for [Claude Code](https://claude.com/claude-code) 
 Sonnet 5:  7d>0/06:45 76% ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▀  5h>2:32 37% ▄▄▄▄▄▄▄▄▄▄▄▄▀▄▄▄▄▄▄▄▄▄▄▄▄
 ```
 
-(in a real terminal the bar is colored green → yellow → red as it fills, and the marker cell is genuinely two-tone: a drift-colored top half over the usage-colored background on the bottom — green when you're pacing ahead of usage, yellow when you're roughly on pace, red when usage is outrunning the clock — see "How the marker works" below.)
+(in a real terminal the bar is colored green → yellow → red as it fills, and the marker cell is genuinely two-tone: a drift-colored top half over the usage-colored background on the bottom — green when you're comfortably ahead of usage, yellow when roughly in step, red when behind — see "How the marker works" below.)
 
 ## What it shows
 
 - **`7d>0/06:45`** — bold label + countdown to the 7-day window reset, `days/HH:MM`.
 - **`76%`** — percentage of that window's quota used (`used_percentage` from the JSON).
-- **the bar** — 25 cells of `▄` (lower-half block), colored green/yellow/red as it fills based on usage%. One cell is replaced by `▀` (upper-half block): its position marks what **% of the window's time** has already elapsed, and its color shows the drift between that time% and the usage% — green when time is 15+ points ahead of usage (comfortable pace), red when usage is 15+ points ahead of time (burning quota too fast), yellow in between.
+- **the bar** — 25 cells of `▄` (lower-half block), colored green/yellow/red as it fills based on usage%. One cell is replaced by `▀` (upper-half block): its position marks what **% of the window's time** has already elapsed, and its color shows the drift between that time% and the usage% — green when time is more than 10 points ahead of usage (comfortable margin), yellow within ±10 points (roughly in step), red when more than 10 points behind (burning quota faster than the clock).
 - Same pair of fields for the 5-hour window (`5h>H:MM`).
 
 Comparing the fill (usage) against the single `▀` marker (time) tells you in one glance whether you're ahead of or behind the clock for that window.
 
 ## How the marker works
 
-The marker's foreground color is picked by comparing `time_pct` (% of the window elapsed) against `pct` (% of quota used): `diff = time_pct - pct`. `diff >= 15` → green (`ESC[32m`), `diff <= -15` → red (`ESC[31m`), otherwise → yellow (`ESC[93m`). It's then drawn as `▀` in that color, with the background set to whatever segment it lands on (`ESC[42m` green / `ESC[103m` bright yellow / `ESC[41m` red / `ESC[100m` gray). `▀` only fills the top half of the cell in the foreground color, so the top half renders in the drift color while the bottom half shows through as the usage-segment background — a two-tone cell without needing two characters.
+The marker's foreground color is picked by comparing `time_pct` (% of the window elapsed) against `pct` (% of quota used): `diff = time_pct - pct`. `diff > DRIFT_THRESHOLD` → green (`ESC[32m`), `diff < -DRIFT_THRESHOLD` → red (`ESC[31m`), otherwise → yellow (`ESC[93m`). `DRIFT_THRESHOLD` defaults to `10` and is configurable, see below. It's then drawn as `▀` in that color, with the background set to whatever segment it lands on (`ESC[42m` green / `ESC[103m` bright yellow / `ESC[41m` red / `ESC[100m` gray). `▀` only fills the top half of the cell in the foreground color, so the top half renders in the drift color while the bottom half shows through as the usage-segment background — a two-tone cell without needing two characters.
+
+## Configuration
+
+Optional — the script works with zero configuration, `DRIFT_THRESHOLD` just defaults to `10`. To change it, create:
+
+```
+$XDG_CONFIG_HOME/claude-code-limits-statusline/config
+```
+
+(or `~/.config/claude-code-limits-statusline/config` if `$XDG_CONFIG_HOME` is unset, the usual case) containing:
+
+```bash
+DRIFT_THRESHOLD=10
+```
+
+The file is sourced as a plain shell script if it exists, so any valid bash is fine — but the only variable the script reads from it is `DRIFT_THRESHOLD`. See [`config.example`](config.example).
 
 ## Install
 

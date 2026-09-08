@@ -1,0 +1,9 @@
+# Example config for claude-code-limits-statusline.
+# Copy to $XDG_CONFIG_HOME/claude-code-limits-statusline/config
+# (or ~/.config/claude-code-limits-statusline/config).
+# Sourced as plain bash; the script only reads DRIFT_THRESHOLD from it.
+
+# Percentage-point margin between time% elapsed and usage% used that counts
+# as "comfortable" (green) or "tight" (red) for the time marker's color.
+# Anything closer than this shows yellow. Default: 10.
+DRIFT_THRESHOLD=10

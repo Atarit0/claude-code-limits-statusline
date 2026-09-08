@@ -6,6 +6,16 @@ WIDTH=25
 GREEN_END=10
 YELLOW_END=18
 
+# Drift threshold (percentage points) for the time marker's color: how far
+# ahead/behind of the clock counts as "comfortable" (green) vs "tight"
+# (red), with anything closer than that in yellow. Overridable via
+# $XDG_CONFIG_HOME/claude-code-limits-statusline/config (falls back to
+# ~/.config/... if XDG_CONFIG_HOME is unset), a plain shell-sourced file
+# setting DRIFT_THRESHOLD=<n>.
+DRIFT_THRESHOLD=10
+CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/claude-code-limits-statusline/config"
+[ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"
+
 bar() {
     local pct=$1
     local time_pct=$2
@@ -23,9 +33,9 @@ bar() {
     local marker_fg=$'\033[97m'
     if [ -n "$time_pct" ]; then
         local diff=$(( time_pct - pct ))
-        if (( diff >= 15 )); then
+        if (( diff > DRIFT_THRESHOLD )); then
             marker_fg=$'\033[32m'
-        elif (( diff <= -15 )); then
+        elif (( diff < -DRIFT_THRESHOLD )); then
             marker_fg=$'\033[31m'
         else
             marker_fg=$'\033[93m'
